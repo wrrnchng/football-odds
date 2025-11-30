@@ -248,18 +248,18 @@ export function Teams() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-slate-900">Teams</h1>
-        <p className="text-slate-600">Search and view team statistics</p>
+    <div className="space-y-8">
+      <div className="space-y-1.5">
+        <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 leading-tight">Teams</h1>
+        <p className="text-base text-slate-600">Search and view team statistics</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Left side: League selector, search and team list */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="space-y-3">
+        <div className="lg:col-span-1 space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-900 mb-2">
+              <label className="block text-sm font-semibold text-slate-900 mb-2.5">
                 Select League
               </label>
               <Select
@@ -269,7 +269,7 @@ export function Teams() {
                   setSelectedTeam(null) // Clear selected team when league changes
                 }}
               >
-                <SelectTrigger className="w-full bg-white border-slate-200">
+                <SelectTrigger className="w-full h-11 bg-white border-slate-200">
                   <SelectValue placeholder="Select a league" />
                 </SelectTrigger>
                 <SelectContent>
@@ -323,16 +323,16 @@ export function Teams() {
             </div>
           </div>
 
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+          <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
             {filteredTeams.length === 0 ? (
-              <p className="text-slate-600 text-center py-4">
+              <p className="text-slate-600 text-center py-6 text-sm">
                 {searchTerm
                   ? "No teams found matching your search."
                   : `No teams found in ${selectedLeague}.`}
               </p>
             ) : (
               <>
-                <div className="text-xs text-slate-500 mb-2 px-1">
+                <div className="text-xs text-slate-500 mb-3 px-1.5">
                   {filteredTeams.length} team{filteredTeams.length !== 1 ? "s" : ""} found
                 </div>
                 {filteredTeams.map((team) => (
@@ -348,28 +348,28 @@ export function Teams() {
                       setActiveTab("stats")
                     }}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-900">{team.name}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm sm:text-base text-slate-900 leading-tight">{team.name}</p>
                           {team.abbreviation && (
-                            <p className="text-xs text-slate-500 mt-0.5">{team.abbreviation}</p>
+                            <p className="text-xs text-slate-500 mt-1">{team.abbreviation}</p>
                           )}
                         </div>
-                        <Trophy className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 ml-2" />
                       </div>
-                      <div className="grid grid-cols-3 gap-2 mt-3 text-center text-sm">
+                      <div className="grid grid-cols-3 gap-2.5 mt-4 text-center">
                         <div>
-                          <p className="font-bold text-emerald-600">{team.wins}</p>
-                          <p className="text-xs text-slate-600">W</p>
+                          <p className="font-bold text-base text-emerald-600">{team.wins}</p>
+                          <p className="text-xs text-slate-600 mt-0.5">W</p>
                         </div>
                         <div>
-                          <p className="font-bold text-blue-600">{team.draws}</p>
-                          <p className="text-xs text-slate-600">D</p>
+                          <p className="font-bold text-base text-blue-600">{team.draws}</p>
+                          <p className="text-xs text-slate-600 mt-0.5">D</p>
                         </div>
                         <div>
-                          <p className="font-bold text-red-600">{team.losses}</p>
-                          <p className="text-xs text-slate-600">L</p>
+                          <p className="font-bold text-base text-red-600">{team.losses}</p>
+                          <p className="text-xs text-slate-600 mt-0.5">L</p>
                         </div>
                       </div>
                     </CardContent>
@@ -383,11 +383,11 @@ export function Teams() {
         {/* Right side: Team stats panel - visible immediately when selected */}
         <div className="lg:col-span-2">
           {selectedTeam ? (
-            <div className="space-y-4">
-              <div className="flex gap-2 border-b border-slate-200">
+            <div className="space-y-5">
+              <div className="flex gap-1 border-b border-slate-200">
                 <button
                   onClick={() => setActiveTab("stats")}
-                  className={`px-4 py-3 font-semibold transition-colors border-b-2 ${
+                  className={`px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${
                     activeTab === "stats"
                       ? "border-emerald-500 text-emerald-600"
                       : "border-transparent text-slate-600 hover:text-slate-900"
@@ -397,7 +397,7 @@ export function Teams() {
                 </button>
                 <button
                   onClick={() => setActiveTab("h2h")}
-                  className={`px-4 py-3 font-semibold transition-colors border-b-2 ${
+                  className={`px-5 py-3 font-semibold text-sm transition-colors border-b-2 ${
                     activeTab === "h2h"
                       ? "border-emerald-500 text-emerald-600"
                       : "border-transparent text-slate-600 hover:text-slate-900"
@@ -410,15 +410,15 @@ export function Teams() {
               {/* Team Stats Tab */}
               {activeTab === "stats" && (
                 <Card className="border-slate-200 bg-gradient-to-br from-emerald-50 to-blue-50">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle className="text-slate-900">{selectedTeam.name}</CardTitle>
-                        <p className="text-sm text-slate-600">{selectedTeam.league}</p>
+                        <CardTitle className="text-xl sm:text-2xl text-slate-900 leading-tight">{selectedTeam.name}</CardTitle>
+                        <p className="text-sm text-slate-600 mt-1">{selectedTeam.league}</p>
                       </div>
                       <button
                         onClick={() => setSelectedTeam(null)}
-                        className="text-slate-400 hover:text-slate-600 text-xl"
+                        className="text-slate-400 hover:text-slate-600 text-xl w-8 h-8 flex items-center justify-center rounded hover:bg-slate-100 transition-colors"
                       >
                         ✕
                       </button>
@@ -426,22 +426,22 @@ export function Teams() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-sm text-slate-600">Total Goals</p>
-                        <p className="text-2xl font-bold text-emerald-600">{selectedTeam.goalsScored}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Total Goals</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{selectedTeam.goalsScored}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-sm text-slate-600">Goals Conceded</p>
-                        <p className="text-2xl font-bold text-red-600">{selectedTeam.goalsConceded}</p>
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Goals Conceded</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-red-600">{selectedTeam.goalsConceded}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-sm text-slate-600">Points</p>
-                        <p className="text-2xl font-bold text-blue-600">{selectedTeam.points}</p>
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Points</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-blue-600">{selectedTeam.points}</p>
                       </div>
-                      <div className="bg-white rounded-lg p-4 border border-slate-200">
-                        <p className="text-sm text-slate-600">Matches Played</p>
-                        <p className="text-2xl font-bold text-slate-900">
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Matches Played</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-slate-900">
                           {selectedTeam.wins + selectedTeam.draws + selectedTeam.losses}
                         </p>
                       </div>
@@ -449,19 +449,19 @@ export function Teams() {
 
                     {/* Recent Matches */}
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900 mb-3">Last 10 Matches</h3>
+                      <h3 className="text-lg font-bold text-slate-900 mb-4">Last 10 Matches</h3>
                       {loadingMatches ? (
-                        <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center justify-center py-10">
                           <Spinner className="w-6 h-6" />
                         </div>
                       ) : recentMatches.length === 0 ? (
-                        <p className="text-slate-600 text-center py-4">No recent matches found.</p>
+                        <p className="text-slate-600 text-center py-6 text-sm">No recent matches found.</p>
                       ) : (
-                        <div className="space-y-2 max-h-80 overflow-y-auto">
+                        <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
                           {recentMatches.map((match) => (
                           <div
                             key={match.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border ${
+                            className={`flex items-center justify-between p-4 rounded-lg border ${
                               match.result === "win"
                                 ? "bg-emerald-50 border-emerald-200"
                                 : match.result === "draw"
@@ -469,10 +469,10 @@ export function Teams() {
                                   : "bg-red-50 border-red-200"
                             }`}
                           >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className="font-semibold text-slate-900">{match.opponent}</p>
-                                <span className={`text-xs px-2 py-0.5 rounded ${
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{match.opponent}</p>
+                                <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
                                   match.isHome 
                                     ? "bg-blue-100 text-blue-700" 
                                     : "bg-slate-100 text-slate-700"
@@ -482,10 +482,10 @@ export function Teams() {
                               </div>
                               <p className="text-xs text-slate-600">{match.date}</p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right ml-4 flex-shrink-0">
                               <p className="text-lg font-bold text-slate-900">{match.score}</p>
                               <p
-                                className={`text-xs font-semibold ${
+                                className={`text-xs font-semibold mt-0.5 ${
                                   match.result === "win"
                                     ? "text-emerald-600"
                                     : match.result === "draw"
@@ -508,20 +508,20 @@ export function Teams() {
               {/* Head-to-Head Tab */}
               {activeTab === "h2h" && (
                 <Card className="border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="text-slate-900">Head-to-Head Comparison</CardTitle>
-                    <p className="text-sm text-slate-600">Compare {selectedTeam.name} against another team</p>
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl sm:text-2xl text-slate-900 leading-tight">Head-to-Head Comparison</CardTitle>
+                    <p className="text-sm text-slate-600 mt-1">Compare {selectedTeam.name} against another team</p>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-5">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-900 mb-2">Compare with</label>
+                      <label className="block text-sm font-semibold text-slate-900 mb-2.5">Compare with</label>
                       <select
                         value={h2hTeam2?.id || ""}
                         onChange={(e) => {
                           const team = teams.find((t) => t.id === Number.parseInt(e.target.value))
                           setH2hTeam2(team || null)
                         }}
-                        className="w-full p-2 border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:border-emerald-500"
+                        className="w-full h-11 px-3 border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                       >
                         <option value="">Choose a team...</option>
                         {teams.map((team) => (
@@ -533,11 +533,11 @@ export function Teams() {
                     </div>
 
                     {h2hTeam2 && (
-                      <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-slate-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-bold text-slate-900">{selectedTeam.name}</h3>
-                          <span className="text-sm font-semibold text-slate-600">vs</span>
-                          <h3 className="text-lg font-bold text-slate-900">{h2hTeam2.name}</h3>
+                      <div className="mt-6 p-5 sm:p-6 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center justify-between mb-5 gap-4">
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate flex-1">{selectedTeam.name}</h3>
+                          <span className="text-sm font-semibold text-slate-600 flex-shrink-0 px-2">vs</span>
+                          <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate flex-1 text-right">{h2hTeam2.name}</h3>
                         </div>
 
                         {!headToHead ? (
@@ -549,27 +549,27 @@ export function Teams() {
                             No head-to-head data available for these teams.
                           </p>
                         ) : (
-                          <div className="space-y-4">
+                          <div className="space-y-5">
                             <div className="grid grid-cols-3 gap-4">
-                              <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
-                                <p className="text-2xl font-bold text-emerald-600">{headToHead.team1Wins}</p>
-                                <p className="text-xs text-slate-600">Wins</p>
+                              <div className="text-center p-4 bg-white rounded-lg border border-slate-200">
+                                <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{headToHead.team1Wins}</p>
+                                <p className="text-xs text-slate-600 mt-1.5">Wins</p>
                               </div>
-                              <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
-                                <p className="text-2xl font-bold text-blue-600">{headToHead.draws}</p>
-                                <p className="text-xs text-slate-600">Draws</p>
+                              <div className="text-center p-4 bg-white rounded-lg border border-slate-200">
+                                <p className="text-2xl sm:text-3xl font-bold text-blue-600">{headToHead.draws}</p>
+                                <p className="text-xs text-slate-600 mt-1.5">Draws</p>
                               </div>
-                              <div className="text-center p-3 bg-white rounded-lg border border-slate-200">
-                                <p className="text-2xl font-bold text-red-600">{headToHead.team2Wins}</p>
-                                <p className="text-xs text-slate-600">Wins</p>
+                              <div className="text-center p-4 bg-white rounded-lg border border-slate-200">
+                                <p className="text-2xl sm:text-3xl font-bold text-red-600">{headToHead.team2Wins}</p>
+                                <p className="text-xs text-slate-600 mt-1.5">Wins</p>
                               </div>
                             </div>
                             
                             {/* Last 5 Matches */}
                             {headToHead.matches && headToHead.matches.length > 0 && (
                               <div className="mt-6">
-                                <h4 className="text-sm font-semibold text-slate-900 mb-3">Last 5 Matches</h4>
-                                <div className="space-y-2">
+                                <h4 className="text-sm font-semibold text-slate-900 mb-4">Last 5 Matches</h4>
+                                <div className="space-y-2.5">
                                   {headToHead.matches.map((match) => {
                                     // team1Score is always for selectedTeam, team2Score is always for h2hTeam2
                                     const selectedTeamWon = match.team1Score > match.team2Score;
@@ -579,36 +579,36 @@ export function Teams() {
                                     return (
                                       <div
                                         key={match.id}
-                                        className="p-3 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                                        className="p-4 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
                                       >
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                              <span className={`text-sm font-semibold ${
+                                        <div className="flex items-center justify-between gap-4">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                              <span className={`text-sm font-semibold truncate ${
                                                 selectedTeamWon ? "text-emerald-600" : opponentWon ? "text-red-600" : "text-slate-900"
                                               }`}>
                                                 {selectedTeam.name}
                                               </span>
-                                              <span className="text-xs text-slate-500">vs</span>
-                                              <span className={`text-sm font-semibold ${
+                                              <span className="text-xs text-slate-500 flex-shrink-0">vs</span>
+                                              <span className={`text-sm font-semibold truncate ${
                                                 opponentWon ? "text-emerald-600" : selectedTeamWon ? "text-red-600" : "text-slate-900"
                                               }`}>
                                                 {h2hTeam2.name}
                                               </span>
                                               {match.team1IsHome && (
-                                                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex-shrink-0">
                                                   H
                                                 </span>
                                               )}
                                               {!match.team1IsHome && (
-                                                <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 flex-shrink-0">
                                                   A
                                                 </span>
                                               )}
                                             </div>
                                             <p className="text-xs text-slate-500">{match.date}</p>
                                           </div>
-                                          <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-2 flex-shrink-0">
                                             <span className={`text-lg font-bold ${
                                               selectedTeamWon ? "text-emerald-600" : opponentWon ? "text-red-600" : "text-slate-900"
                                             }`}>
@@ -637,8 +637,8 @@ export function Teams() {
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-96 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-lg border-2 border-dashed border-slate-200">
-              <p className="text-slate-600 text-center">Select a team to view stats and head-to-head comparisons</p>
+            <div className="flex items-center justify-center h-96 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-lg border-2 border-dashed border-slate-200 p-6">
+              <p className="text-slate-600 text-center text-sm sm:text-base">Select a team to view stats and head-to-head comparisons</p>
             </div>
           )}
         </div>

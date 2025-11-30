@@ -16,7 +16,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-background via-slate-50 to-background">
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="pt-20 px-4 md:px-6 max-w-7xl mx-auto pb-12">
+      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-16">
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "teams" && <Teams />}
         {activeTab === "players" && <Players />}

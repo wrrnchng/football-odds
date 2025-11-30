@@ -121,5 +121,29 @@
   }
   body {
     @apply bg-background text-foreground;
+    @apply leading-relaxed;
+  }
+  
+  /* Improved typography for better readability */
+  h1, h2, h3, h4, h5, h6 {
+    @apply leading-tight;
+    letter-spacing: -0.01em;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+  
+  /* Better spacing for interactive elements */
+  button, a {
+    @apply transition-all duration-200;
+  }
+  
+  /* Improved focus states for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
   }
 }
