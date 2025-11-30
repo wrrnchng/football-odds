@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPlayerStats } from "@/lib/db/players";
 import { getRecentMatches } from "@/lib/db/teams";
 import { db } from "@/db";
-import { players, teams, playerMatchStats } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { players, teams, playerMatchStats, matchPlayers } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -42,20 +42,66 @@ export async function GET(
       return NextResponse.json([]);
     }
 
-    // Format matches for frontend
-    const formattedMatches = await Promise.all(
-      teamMatches.map(async (match) => {
+    // Batch fetch all teams and player stats in one query each
+    const matchIds = teamMatches.map(m => m.id);
+    const teamIds = new Set<number>();
+    teamMatches.forEach(m => {
+      teamIds.add(m.homeTeamId);
+      teamIds.add(m.awayTeamId);
+    });
+
+    // Get all teams in one query
+    const allTeams = await db
+      .select()
+      .from(teams)
+      .where(inArray(teams.id, Array.from(teamIds)));
+    const teamsMap = new Map(allTeams.map(t => [t.id, t]));
+
+    // Get all player match stats in one query
+    const allPlayerStats = await db
+      .select({
+        matchId: playerMatchStats.matchId,
+        goals: playerMatchStats.goals,
+        shotsOnTarget: playerMatchStats.shotsOnTarget,
+        assists: playerMatchStats.assists,
+        passes: playerMatchStats.passes,
+        passesCompleted: playerMatchStats.passesCompleted,
+        tackles: playerMatchStats.tackles,
+        interceptions: playerMatchStats.interceptions,
+        saves: playerMatchStats.saves,
+        yellowCards: playerMatchStats.yellowCards,
+        redCards: playerMatchStats.redCards,
+      })
+      .from(playerMatchStats)
+      .where(
+        and(
+          inArray(playerMatchStats.matchId, matchIds),
+          eq(playerMatchStats.playerId, playerId)
+        )
+      );
+    const playerStatsMap = new Map(allPlayerStats.map(s => [s.matchId, s]));
+
+    // Get all matches where player actually played (to filter out matches they didn't play in)
+    const playerMatches = await db
+      .select({
+        matchId: matchPlayers.matchId,
+      })
+      .from(matchPlayers)
+      .where(
+        and(
+          inArray(matchPlayers.matchId, matchIds),
+          eq(matchPlayers.playerId, playerId)
+        )
+      );
+    const playerMatchIds = new Set(playerMatches.map(m => m.matchId));
+
+    // Format matches for frontend - only include matches where player actually played
+    const formattedMatches = teamMatches
+      .filter(match => playerMatchIds.has(match.id)) // Only show matches where player played
+      .map((match) => {
         try {
-          const [homeTeam] = await db
-            .select()
-            .from(teams)
-            .where(eq(teams.id, match.homeTeamId))
-            .limit(1);
-          const [awayTeam] = await db
-            .select()
-            .from(teams)
-            .where(eq(teams.id, match.awayTeamId))
-            .limit(1);
+          const homeTeam = teamsMap.get(match.homeTeamId);
+          const awayTeam = teamsMap.get(match.awayTeamId);
 
           const isHome = match.homeTeamId === currentTeamId;
           const opponent = isHome ? awayTeam : homeTeam;
@@ -78,19 +124,9 @@ export async function GET(
             dateStr = String(match.date).split("T")[0];
           }
 
-          // Get player's shots on target for this match
-          const [playerStats] = await db
-            .select({
-              shotsOnTarget: playerMatchStats.shotsOnTarget,
-            })
-            .from(playerMatchStats)
-            .where(
-              and(
-                eq(playerMatchStats.matchId, match.id),
-                eq(playerMatchStats.playerId, playerId)
-              )
-            )
-            .limit(1);
+          // Get player's stats from map
+          // If player played but has no stats record, default to 0
+          const playerStats = playerStatsMap.get(match.id);
 
           return {
             id: match.id,
@@ -99,14 +135,22 @@ export async function GET(
             result,
             date: dateStr,
             isHome,
-            shotsOnTarget: playerStats?.shotsOnTarget ?? null,
+            goals: playerStats ? (playerStats.goals ?? 0) : 0,
+            shotsOnTarget: playerStats ? (playerStats.shotsOnTarget ?? 0) : 0,
+            assists: playerStats ? (playerStats.assists ?? 0) : 0,
+            passes: playerStats ? (playerStats.passes ?? 0) : 0,
+            passesCompleted: playerStats ? (playerStats.passesCompleted ?? 0) : 0,
+            tackles: playerStats ? (playerStats.tackles ?? 0) : 0,
+            interceptions: playerStats ? (playerStats.interceptions ?? 0) : 0,
+            saves: playerStats ? (playerStats.saves ?? 0) : 0,
+            yellowCards: playerStats ? (playerStats.yellowCards ?? 0) : 0,
+            redCards: playerStats ? (playerStats.redCards ?? 0) : 0,
           };
         } catch (matchError) {
           console.error(`Error formatting match ${match.id}:`, matchError);
           return null;
         }
-      })
-    );
+      });
 
     // Filter out any null results
     const validMatches = formattedMatches.filter((m): m is NonNullable<typeof m> => m !== null);

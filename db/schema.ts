@@ -80,7 +80,7 @@ export const matchStatistics = sqliteTable("match_statistics", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
-// Player match statistics table - tracks goals, shots on target per match
+// Player match statistics table - tracks individual player stats per match
 export const playerMatchStats = sqliteTable("player_match_stats", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   matchId: integer("match_id").references(() => matches.id).notNull(),
@@ -88,6 +88,14 @@ export const playerMatchStats = sqliteTable("player_match_stats", {
   teamId: integer("team_id").references(() => teams.id).notNull(),
   goals: integer("goals").notNull().default(0),
   shotsOnTarget: integer("shots_on_target").notNull().default(0),
+  assists: integer("assists").notNull().default(0),
+  passes: integer("passes").notNull().default(0),
+  passesCompleted: integer("passes_completed").notNull().default(0),
+  tackles: integer("tackles").notNull().default(0),
+  interceptions: integer("interceptions").notNull().default(0),
+  saves: integer("saves").notNull().default(0),
+  yellowCards: integer("yellow_cards").notNull().default(0),
+  redCards: integer("red_cards").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 

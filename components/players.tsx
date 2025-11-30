@@ -28,7 +28,16 @@ interface PlayerRecentMatch {
   result: "win" | "draw" | "loss"
   date: string
   isHome: boolean
-  shotsOnTarget: number | null
+  goals: number
+  shotsOnTarget: number
+  assists: number
+  passes: number
+  passesCompleted: number
+  tackles: number
+  interceptions: number
+  saves: number
+  yellowCards: number
+  redCards: number
 }
 
 export function Players() {
@@ -85,6 +94,28 @@ export function Players() {
     }
     fetchPlayers()
   }, [selectedLeague])
+
+  useEffect(() => {
+    if (!selectedPlayer) {
+      setRecentMatches([])
+      return
+    }
+
+    const fetchRecentMatches = async () => {
+      try {
+        setLoadingMatches(true)
+        const response = await fetch(`/api/players/${selectedPlayer.id}/recent-matches`)
+        if (!response.ok) throw new Error("Failed to fetch recent matches")
+        const data = await response.json()
+        setRecentMatches(data)
+      } catch (err) {
+        console.error("Error fetching recent matches:", err)
+      } finally {
+        setLoadingMatches(false)
+      }
+    }
+    fetchRecentMatches()
+  }, [selectedPlayer])
 
   // Get all unique leagues from all players (for selector)
   const availableLeagues = useMemo(() => {
@@ -324,7 +355,10 @@ export function Players() {
                                   ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
                                   : "bg-red-50 border-red-200 hover:bg-red-100"
                             }`}
-                            onClick={() => setExpandedMatch(expandedMatch === match.id ? null : match.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setExpandedMatch(expandedMatch === match.id ? null : match.id)
+                            }}
                           >
                             <div className="flex items-center justify-between p-4">
                               <div className="flex-1 min-w-0">
@@ -357,11 +391,79 @@ export function Players() {
                             </div>
                             {expandedMatch === match.id && (
                               <div className="px-4 pb-4 pt-2 border-t border-slate-200 bg-white/50">
-                                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 mt-2">
-                                  <p className="text-xs text-slate-600 mb-1">Shots on Target</p>
-                                  <p className="text-xl font-bold text-blue-600">
-                                    {match.shotsOnTarget !== null ? match.shotsOnTarget : "N/A"}
-                                  </p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-2">
+                                  <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                                    <p className="text-xs text-slate-600 mb-1">Goals</p>
+                                    <p className="text-xl font-bold text-emerald-600">
+                                      {match.goals}
+                                    </p>
+                                  </div>
+                                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                                    <p className="text-xs text-slate-600 mb-1">Shots on Target</p>
+                                    <p className="text-xl font-bold text-blue-600">
+                                      {match.shotsOnTarget}
+                                    </p>
+                                  </div>
+                                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                                    <p className="text-xs text-slate-600 mb-1">Assists</p>
+                                    <p className="text-xl font-bold text-purple-600">
+                                      {match.assists}
+                                    </p>
+                                  </div>
+                                  <div className="bg-cyan-50 rounded-lg p-3 border border-cyan-200">
+                                    <p className="text-xs text-slate-600 mb-1">Passes</p>
+                                    <p className="text-xl font-bold text-cyan-600">
+                                      {match.passes}
+                                    </p>
+                                  </div>
+                                  {match.passesCompleted > 0 && (
+                                    <div className="bg-teal-50 rounded-lg p-3 border border-teal-200">
+                                      <p className="text-xs text-slate-600 mb-1">Passes Completed</p>
+                                      <p className="text-xl font-bold text-teal-600">
+                                        {match.passesCompleted}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {match.tackles > 0 && (
+                                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                                      <p className="text-xs text-slate-600 mb-1">Tackles</p>
+                                      <p className="text-xl font-bold text-orange-600">
+                                        {match.tackles}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {match.interceptions > 0 && (
+                                    <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
+                                      <p className="text-xs text-slate-600 mb-1">Interceptions</p>
+                                      <p className="text-xl font-bold text-indigo-600">
+                                        {match.interceptions}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {match.saves > 0 && (
+                                    <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
+                                      <p className="text-xs text-slate-600 mb-1">Saves</p>
+                                      <p className="text-xl font-bold text-pink-600">
+                                        {match.saves}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {match.yellowCards > 0 && (
+                                    <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                                      <p className="text-xs text-slate-600 mb-1">Yellow Cards</p>
+                                      <p className="text-xl font-bold text-yellow-600">
+                                        {match.yellowCards}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {match.redCards > 0 && (
+                                    <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+                                      <p className="text-xs text-slate-600 mb-1">Red Cards</p>
+                                      <p className="text-xl font-bold text-red-600">
+                                        {match.redCards}
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )}

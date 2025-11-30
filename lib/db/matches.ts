@@ -190,6 +190,14 @@ export async function upsertPlayerMatchStats(data: {
   teamId: number;
   goals?: number;
   shotsOnTarget?: number;
+  assists?: number;
+  passes?: number;
+  passesCompleted?: number;
+  tackles?: number;
+  interceptions?: number;
+  saves?: number;
+  yellowCards?: number;
+  redCards?: number;
 }) {
   // Check if already exists
   const existing = await db
@@ -204,14 +212,22 @@ export async function upsertPlayerMatchStats(data: {
     .limit(1);
 
   if (existing.length > 0) {
-    // Update existing stats
+    // Update existing stats - REPLACE values, don't accumulate (per-match stats)
     const [updated] = await db
       .update(playerMatchStats)
       .set({
-        goals: (existing[0].goals || 0) + (data.goals || 0),
+        goals: data.goals !== undefined ? data.goals : (existing[0].goals || 0),
         shotsOnTarget: data.shotsOnTarget !== undefined 
           ? data.shotsOnTarget 
           : (existing[0].shotsOnTarget || 0),
+        assists: data.assists !== undefined ? data.assists : (existing[0].assists || 0),
+        passes: data.passes !== undefined ? data.passes : (existing[0].passes || 0),
+        passesCompleted: data.passesCompleted !== undefined ? data.passesCompleted : (existing[0].passesCompleted || 0),
+        tackles: data.tackles !== undefined ? data.tackles : (existing[0].tackles || 0),
+        interceptions: data.interceptions !== undefined ? data.interceptions : (existing[0].interceptions || 0),
+        saves: data.saves !== undefined ? data.saves : (existing[0].saves || 0),
+        yellowCards: data.yellowCards !== undefined ? data.yellowCards : (existing[0].yellowCards || 0),
+        redCards: data.redCards !== undefined ? data.redCards : (existing[0].redCards || 0),
       })
       .where(
         and(
@@ -233,6 +249,14 @@ export async function upsertPlayerMatchStats(data: {
       teamId: data.teamId,
       goals: data.goals || 0,
       shotsOnTarget: data.shotsOnTarget || 0,
+      assists: data.assists || 0,
+      passes: data.passes || 0,
+      passesCompleted: data.passesCompleted || 0,
+      tackles: data.tackles || 0,
+      interceptions: data.interceptions || 0,
+      saves: data.saves || 0,
+      yellowCards: data.yellowCards || 0,
+      redCards: data.redCards || 0,
     })
     .returning();
 

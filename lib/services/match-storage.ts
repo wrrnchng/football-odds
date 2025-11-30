@@ -9,6 +9,9 @@ import {
   insertMatchStatistics,
   upsertPlayerMatchStats,
 } from "@/lib/db/matches";
+import { db } from "@/db";
+import { playerMatchStats } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Parse league name from season slug
@@ -160,33 +163,97 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
                   teamId,
                   goals: 0,
                   shotsOnTarget: 0,
+                  assists: 0,
+                  passes: 0,
+                  passesCompleted: 0,
+                  tackles: 0,
+                  interceptions: 0,
+                  saves: 0,
+                  yellowCards: 0,
+                  redCards: 0,
                 });
               }
 
               const playerStat = playerStatsMap.get(statKey)!;
 
-              // Parse statistic value - ESPN provides displayValue in the stat object
-              // For player stats, we need to check the stat name and extract the value
-              const statValue = parseFloat(stat.displayValue);
-              if (!isNaN(statValue)) {
-                // Map ESPN statistic names to our stats
-                const statName = stat.name?.toLowerCase() || "";
-                const statAbbr = stat.abbreviation?.toLowerCase() || "";
+              // Map ESPN statistic names to our stats
+              const statName = stat.name?.toLowerCase() || "";
+              const statAbbr = stat.abbreviation?.toLowerCase() || "";
 
-                // Check for shots on target variations
-              // ESPN provides player-level stats in the athletes array
-              // The stat name indicates what metric, and athletes are ranked by that metric
+              // Helper function to extract player value from athlete object
+              const extractPlayerValue = (): number => {
+                if (athlete.value !== undefined && athlete.value !== null) {
+                  return athlete.value;
+                } else if (athlete.stat !== undefined && athlete.stat !== null) {
+                  return athlete.stat;
+                } else if (athlete.displayValue) {
+                  const parsedValue = parseFloat(athlete.displayValue);
+                  if (!isNaN(parsedValue)) {
+                    return parsedValue;
+                  }
+                }
+                // If player appears in the stat list, they have at least 1
+                return 1;
+              };
+
+              // Parse different statistics from ESPN API
+              const playerValue = extractPlayerValue();
+
+              // Shots on Target
               if (
                 (statName.includes("shot") && statName.includes("target")) ||
                 statAbbr.includes("sot") ||
                 statName === "shotsontarget" ||
                 statName === "shots on target"
               ) {
-                // ESPN athletes array contains players ranked by this stat
-                // We need to extract individual player values if available
-                // For now, we'll track that this stat exists for this player
-                // The actual value extraction may need to be adjusted based on ESPN API response structure
+                playerStat.shotsOnTarget = Math.max(playerStat.shotsOnTarget, playerValue);
               }
+              // Assists
+              else if (
+                statName.includes("assist") ||
+                statAbbr.includes("ast") ||
+                statAbbr === "a"
+              ) {
+                playerStat.assists = Math.max(playerStat.assists, playerValue);
+              }
+              // Passes
+              else if (
+                statName.includes("pass") && !statName.includes("complete") ||
+                statAbbr.includes("pass")
+              ) {
+                playerStat.passes = Math.max(playerStat.passes, playerValue);
+              }
+              // Passes Completed
+              else if (
+                statName.includes("pass") && statName.includes("complete") ||
+                statName.includes("completed pass") ||
+                statAbbr.includes("comp")
+              ) {
+                playerStat.passesCompleted = Math.max(playerStat.passesCompleted, playerValue);
+              }
+              // Tackles
+              else if (
+                statName.includes("tackle") ||
+                statAbbr.includes("tkl") ||
+                statAbbr === "tk"
+              ) {
+                playerStat.tackles = Math.max(playerStat.tackles, playerValue);
+              }
+              // Interceptions
+              else if (
+                statName.includes("intercept") ||
+                statAbbr.includes("int") ||
+                statAbbr === "i"
+              ) {
+                playerStat.interceptions = Math.max(playerStat.interceptions, playerValue);
+              }
+              // Saves (for goalkeepers)
+              else if (
+                statName.includes("save") ||
+                statAbbr.includes("sv") ||
+                statAbbr === "s"
+              ) {
+                playerStat.saves = Math.max(playerStat.saves, playerValue);
               }
             }
           }
@@ -239,7 +306,66 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
                     teamId,
                     goals: 1,
                     shotsOnTarget: 0,
+                    assists: 0,
+                    passes: 0,
+                    passesCompleted: 0,
+                    tackles: 0,
+                    interceptions: 0,
+                    saves: 0,
+                    yellowCards: 0,
+                    redCards: 0,
                   });
+                }
+              }
+              
+              // Track assists (second athlete in scoring play is typically the assist provider)
+              if (isGoal && i === 1 && detail.athletesInvolved.length > 1) {
+                const statKey = `${player.id}-${match.id}`;
+                if (playerStatsMap.has(statKey)) {
+                  playerStatsMap.get(statKey)!.assists += 1;
+                } else {
+                  playerStatsMap.set(statKey, {
+                    playerId: player.id,
+                    teamId,
+                    goals: 0,
+                    shotsOnTarget: 0,
+                    assists: 1,
+                    passes: 0,
+                    passesCompleted: 0,
+                    tackles: 0,
+                    interceptions: 0,
+                    saves: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                  });
+                }
+              }
+              
+              // Track yellow and red cards
+              if (detail.yellowCard || detail.redCard) {
+                const statKey = `${player.id}-${match.id}`;
+                if (!playerStatsMap.has(statKey)) {
+                  playerStatsMap.set(statKey, {
+                    playerId: player.id,
+                    teamId,
+                    goals: 0,
+                    shotsOnTarget: 0,
+                    assists: 0,
+                    passes: 0,
+                    passesCompleted: 0,
+                    tackles: 0,
+                    interceptions: 0,
+                    saves: 0,
+                    yellowCards: 0,
+                    redCards: 0,
+                  });
+                }
+                const playerStat = playerStatsMap.get(statKey)!;
+                if (detail.yellowCard) {
+                  playerStat.yellowCards += 1;
+                }
+                if (detail.redCard) {
+                  playerStat.redCards += 1;
                 }
               }
             }
@@ -385,6 +511,12 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
   }
 
   // 8. Store all collected player match statistics
+  // Delete existing stats for this match first to avoid duplicates/accumulation
+  await db
+    .delete(playerMatchStats)
+    .where(eq(playerMatchStats.matchId, match.id));
+  
+  // Then insert all fresh stats
   for (const [statKey, playerStat] of playerStatsMap.entries()) {
     await upsertPlayerMatchStats({
       matchId: match.id,
@@ -392,6 +524,14 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
       teamId: playerStat.teamId,
       goals: playerStat.goals,
       shotsOnTarget: playerStat.shotsOnTarget,
+      assists: playerStat.assists,
+      passes: playerStat.passes,
+      passesCompleted: playerStat.passesCompleted,
+      tackles: playerStat.tackles,
+      interceptions: playerStat.interceptions,
+      saves: playerStat.saves,
+      yellowCards: playerStat.yellowCards,
+      redCards: playerStat.redCards,
     });
   }
 }

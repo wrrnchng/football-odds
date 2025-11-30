@@ -179,6 +179,9 @@ export interface ESPNAthlete {
   };
   links?: ESPNLink[];
   position?: string;
+  value?: number;
+  displayValue?: string;
+  stat?: number;
 }
 
 export interface ESPNEventDetail {
