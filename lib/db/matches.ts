@@ -163,6 +163,8 @@ export async function insertMatchStatistics(data: {
   shotsOnTarget?: number | null;
   corners?: number | null;
   fouls?: number | null;
+  yellowCards?: number | null;
+  redCards?: number | null;
 }) {
   const [stats] = await db
     .insert(matchStatistics)
@@ -174,6 +176,8 @@ export async function insertMatchStatistics(data: {
       shotsOnTarget: data.shotsOnTarget,
       corners: data.corners,
       fouls: data.fouls,
+      yellowCards: data.yellowCards ?? 0,
+      redCards: data.redCards ?? 0,
     })
     .returning();
 

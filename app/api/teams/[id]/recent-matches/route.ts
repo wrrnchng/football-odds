@@ -56,6 +56,8 @@ export async function GET(
         teamId: matchStatistics.teamId,
         shotsOnTarget: matchStatistics.shotsOnTarget,
         corners: matchStatistics.corners,
+        yellowCards: matchStatistics.yellowCards,
+        redCards: matchStatistics.redCards,
       })
       .from(matchStatistics)
       .where(
@@ -105,6 +107,8 @@ export async function GET(
           isHome,
           shotsOnTarget: teamStats?.shotsOnTarget ?? null,
           corners: teamStats?.corners ?? null,
+          yellowCards: teamStats?.yellowCards ?? null,
+          redCards: teamStats?.redCards ?? null,
         };
       } catch (matchError) {
         console.error(`Error formatting match ${match.id}:`, matchError);

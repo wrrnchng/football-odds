@@ -273,10 +273,64 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
     }
   }
 
-  // 7. Store match statistics
+  // 7. Count cards from event details per team
+  const teamCardsMap = new Map<number, { yellowCards: number; redCards: number }>();
+  teamCardsMap.set(homeTeam.id, { yellowCards: 0, redCards: 0 });
+  teamCardsMap.set(awayTeam.id, { yellowCards: 0, redCards: 0 });
+
+  if (competition.details) {
+    for (const detail of competition.details) {
+      // Check if this detail has a card
+      if (!detail.yellowCard && !detail.redCard) {
+        continue;
+      }
+
+      let teamId: number | null = null;
+
+      // Try to get team from detail.team first
+      if (detail.team?.id) {
+        const athleteTeam = competitors.find(
+          (c) => c.team.id === detail.team?.id
+        );
+        if (athleteTeam) {
+          const isHome = athleteTeam.homeAway === "home";
+          teamId = isHome ? homeTeam.id : awayTeam.id;
+        }
+      }
+
+      // If no team from detail.team, try to get from athletesInvolved
+      if (!teamId && detail.athletesInvolved && detail.athletesInvolved.length > 0) {
+        const athlete = detail.athletesInvolved[0];
+        if (athlete.team?.id) {
+          const athleteTeam = competitors.find(
+            (c) => c.team.id === athlete.team?.id
+          );
+          if (athleteTeam) {
+            const isHome = athleteTeam.homeAway === "home";
+            teamId = isHome ? homeTeam.id : awayTeam.id;
+          }
+        }
+      }
+
+      // Count the card if we found a team
+      if (teamId) {
+        const cards = teamCardsMap.get(teamId)!;
+        if (detail.yellowCard) {
+          cards.yellowCards += 1;
+        }
+        if (detail.redCard) {
+          cards.redCards += 1;
+        }
+      }
+    }
+  }
+
+  // 8. Store match statistics
   for (const competitor of competitors) {
     const isHome = competitor.homeAway === "home";
     const teamId = isHome ? homeTeam.id : awayTeam.id;
+
+    const cards = teamCardsMap.get(teamId)!;
 
     if (competitor.statistics) {
       let possession: number | null = null;
@@ -316,6 +370,16 @@ export async function storeEvent(event: ESPNEvent): Promise<void> {
         shotsOnTarget,
         corners,
         fouls,
+        yellowCards: cards.yellowCards,
+        redCards: cards.redCards,
+      });
+    } else {
+      // Still store cards even if no other statistics
+      await insertMatchStatistics({
+        matchId: match.id,
+        teamId,
+        yellowCards: cards.yellowCards,
+        redCards: cards.redCards,
       });
     }
   }

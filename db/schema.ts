@@ -75,6 +75,8 @@ export const matchStatistics = sqliteTable("match_statistics", {
   shotsOnTarget: integer("shots_on_target"),
   corners: integer("corners"),
   fouls: integer("fouls"),
+  yellowCards: integer("yellow_cards").default(0).notNull(),
+  redCards: integer("red_cards").default(0).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 

@@ -34,6 +34,8 @@ interface RecentMatch {
   isHome: boolean
   shotsOnTarget: number | null
   corners: number | null
+  yellowCards: number | null
+  redCards: number | null
 }
 
 interface HeadToHeadMatch {
@@ -48,8 +50,12 @@ interface HeadToHeadMatch {
   team1IsHome: boolean
   team1ShotsOnTarget: number | null
   team1Corners: number | null
+  team1YellowCards: number | null
+  team1RedCards: number | null
   team2ShotsOnTarget: number | null
   team2Corners: number | null
+  team2YellowCards: number | null
+  team2RedCards: number | null
 }
 
 interface HeadToHead {
@@ -519,7 +525,7 @@ export function Teams() {
                             </div>
                             {expandedMatch === match.id && (
                               <div className="px-4 pb-4 pt-2 border-t border-slate-200 bg-white/50">
-                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                                   <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
                                     <p className="text-xs text-slate-600 mb-1">Shots on Target</p>
                                     <p className="text-xl font-bold text-purple-600">
@@ -530,6 +536,18 @@ export function Teams() {
                                     <p className="text-xs text-slate-600 mb-1">Corners</p>
                                     <p className="text-xl font-bold text-orange-600">
                                       {match.corners !== null ? match.corners : "N/A"}
+                                    </p>
+                                  </div>
+                                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                                    <p className="text-xs text-slate-600 mb-1">Yellow Cards</p>
+                                    <p className="text-xl font-bold text-yellow-600">
+                                      {match.yellowCards !== null ? match.yellowCards : "N/A"}
+                                    </p>
+                                  </div>
+                                  <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+                                    <p className="text-xs text-slate-600 mb-1">Red Cards</p>
+                                    <p className="text-xl font-bold text-red-600">
+                                      {match.redCards !== null ? match.redCards : "N/A"}
                                     </p>
                                   </div>
                                 </div>
@@ -682,6 +700,18 @@ export function Teams() {
                                                       {match.team1Corners !== null ? match.team1Corners : "N/A"}
                                                     </p>
                                                   </div>
+                                                  <div className="bg-yellow-50 rounded p-2 border border-yellow-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Yellow Cards</p>
+                                                    <p className="text-base font-bold text-yellow-600">
+                                                      {match.team1YellowCards !== null ? match.team1YellowCards : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                  <div className="bg-red-50 rounded p-2 border border-red-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Red Cards</p>
+                                                    <p className="text-base font-bold text-red-600">
+                                                      {match.team1RedCards !== null ? match.team1RedCards : "N/A"}
+                                                    </p>
+                                                  </div>
                                                 </div>
                                               </div>
                                               <div className="bg-white rounded-lg p-3 border border-slate-200">
@@ -697,6 +727,18 @@ export function Teams() {
                                                     <p className="text-xs text-slate-600 mb-0.5">Corners</p>
                                                     <p className="text-base font-bold text-orange-600">
                                                       {match.team2Corners !== null ? match.team2Corners : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                  <div className="bg-yellow-50 rounded p-2 border border-yellow-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Yellow Cards</p>
+                                                    <p className="text-base font-bold text-yellow-600">
+                                                      {match.team2YellowCards !== null ? match.team2YellowCards : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                  <div className="bg-red-50 rounded p-2 border border-red-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Red Cards</p>
+                                                    <p className="text-base font-bold text-red-600">
+                                                      {match.team2RedCards !== null ? match.team2RedCards : "N/A"}
                                                     </p>
                                                   </div>
                                                 </div>

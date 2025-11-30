@@ -51,6 +51,8 @@ export async function GET(
         teamId: matchStatistics.teamId,
         shotsOnTarget: matchStatistics.shotsOnTarget,
         corners: matchStatistics.corners,
+        yellowCards: matchStatistics.yellowCards,
+        redCards: matchStatistics.redCards,
       })
       .from(matchStatistics)
       .where(
@@ -64,7 +66,12 @@ export async function GET(
       );
 
     // Create maps for quick lookup: matchId -> teamId -> stats
-    const statsMap = new Map<number, Map<number, { shotsOnTarget: number | null; corners: number | null }>>();
+    const statsMap = new Map<number, Map<number, { 
+      shotsOnTarget: number | null; 
+      corners: number | null;
+      yellowCards: number | null;
+      redCards: number | null;
+    }>>();
     for (const stat of allMatchStats) {
       if (!statsMap.has(stat.matchId)) {
         statsMap.set(stat.matchId, new Map());
@@ -72,6 +79,8 @@ export async function GET(
       statsMap.get(stat.matchId)!.set(stat.teamId, {
         shotsOnTarget: stat.shotsOnTarget,
         corners: stat.corners,
+        yellowCards: stat.yellowCards,
+        redCards: stat.redCards,
       });
     }
 
@@ -103,8 +112,12 @@ export async function GET(
         team1IsHome: match.team1IsHome,
         team1ShotsOnTarget: team1Stats?.shotsOnTarget ?? null,
         team1Corners: team1Stats?.corners ?? null,
+        team1YellowCards: team1Stats?.yellowCards ?? null,
+        team1RedCards: team1Stats?.redCards ?? null,
         team2ShotsOnTarget: team2Stats?.shotsOnTarget ?? null,
         team2Corners: team2Stats?.corners ?? null,
+        team2YellowCards: team2Stats?.yellowCards ?? null,
+        team2RedCards: team2Stats?.redCards ?? null,
       };
     });
 
