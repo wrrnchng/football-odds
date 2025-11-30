@@ -22,13 +22,19 @@ echo [INFO] Node.js version:
 node --version
 echo.
 
-REM Navigate to frontend directory
-if exist "frontend" (
+REM Navigate to frontend directory if needed
+REM Check if we're already in the frontend directory (package.json exists)
+if exist "package.json" (
+    echo [INFO] Already in frontend directory
+) else if exist "frontend" (
+    REM We're in project root, navigate to frontend
     cd frontend
     echo [INFO] Changed to frontend directory
 ) else (
-    echo [ERROR] frontend directory not found!
-    echo Please ensure you're running this script from the project root.
+    echo [ERROR] Could not find frontend directory or package.json!
+    echo Please ensure you're running this script from either:
+    echo   - The project root directory, OR
+    echo   - The frontend directory
     echo.
     pause
     exit /b 1
