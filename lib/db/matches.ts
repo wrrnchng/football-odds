@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { matches, matchPlayers, matchOdds, matchStatistics } from "@/db/schema";
+import { matches, matchPlayers, matchOdds, matchStatistics, playerMatchStats } from "@/db/schema";
 import { eq, and, or, desc, gte, lte } from "drizzle-orm";
 
 export async function upsertMatch(data: {
@@ -174,6 +174,61 @@ export async function insertMatchStatistics(data: {
       shotsOnTarget: data.shotsOnTarget,
       corners: data.corners,
       fouls: data.fouls,
+    })
+    .returning();
+
+  return stats;
+}
+
+export async function upsertPlayerMatchStats(data: {
+  matchId: number;
+  playerId: number;
+  teamId: number;
+  goals?: number;
+  shotsOnTarget?: number;
+}) {
+  // Check if already exists
+  const existing = await db
+    .select()
+    .from(playerMatchStats)
+    .where(
+      and(
+        eq(playerMatchStats.matchId, data.matchId),
+        eq(playerMatchStats.playerId, data.playerId)
+      )
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    // Update existing stats
+    const [updated] = await db
+      .update(playerMatchStats)
+      .set({
+        goals: (existing[0].goals || 0) + (data.goals || 0),
+        shotsOnTarget: data.shotsOnTarget !== undefined 
+          ? data.shotsOnTarget 
+          : (existing[0].shotsOnTarget || 0),
+      })
+      .where(
+        and(
+          eq(playerMatchStats.matchId, data.matchId),
+          eq(playerMatchStats.playerId, data.playerId)
+        )
+      )
+      .returning();
+
+    return updated;
+  }
+
+  // Insert new stats
+  const [stats] = await db
+    .insert(playerMatchStats)
+    .values({
+      matchId: data.matchId,
+      playerId: data.playerId,
+      teamId: data.teamId,
+      goals: data.goals || 0,
+      shotsOnTarget: data.shotsOnTarget || 0,
     })
     .returning();
 

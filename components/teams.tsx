@@ -21,6 +21,8 @@ interface Team {
   goalsScored: number
   goalsConceded: number
   points: number
+  shotsOnTarget: number
+  corners: number
 }
 
 interface RecentMatch {
@@ -30,6 +32,8 @@ interface RecentMatch {
   result: "win" | "draw" | "loss"
   date: string
   isHome: boolean
+  shotsOnTarget: number | null
+  corners: number | null
 }
 
 interface HeadToHeadMatch {
@@ -42,6 +46,10 @@ interface HeadToHeadMatch {
   team1Score: number
   team2Score: number
   team1IsHome: boolean
+  team1ShotsOnTarget: number | null
+  team1Corners: number | null
+  team2ShotsOnTarget: number | null
+  team2Corners: number | null
 }
 
 interface HeadToHead {
@@ -63,6 +71,8 @@ export function Teams() {
   const [loading, setLoading] = useState(true)
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [expandedMatch, setExpandedMatch] = useState<number | null>(null)
+  const [expandedH2hMatch, setExpandedH2hMatch] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchTeams = async () => {
@@ -426,7 +436,7 @@ export function Teams() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                       <div className="bg-white rounded-lg p-5 border border-slate-200">
                         <p className="text-sm text-slate-600 mb-2">Total Goals</p>
                         <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{selectedTeam.goalsScored}</p>
@@ -445,6 +455,14 @@ export function Teams() {
                           {selectedTeam.wins + selectedTeam.draws + selectedTeam.losses}
                         </p>
                       </div>
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Shots on Target</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-purple-600">{selectedTeam.shotsOnTarget}</p>
+                      </div>
+                      <div className="bg-white rounded-lg p-5 border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-2">Total Corners</p>
+                        <p className="text-2xl sm:text-3xl font-bold text-orange-600">{selectedTeam.corners}</p>
+                      </div>
                     </div>
 
                     {/* Recent Matches */}
@@ -461,43 +479,64 @@ export function Teams() {
                           {recentMatches.map((match) => (
                           <div
                             key={match.id}
-                            className={`flex items-center justify-between p-4 rounded-lg border ${
+                            className={`rounded-lg border cursor-pointer transition-all ${
                               match.result === "win"
-                                ? "bg-emerald-50 border-emerald-200"
+                                ? "bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
                                 : match.result === "draw"
-                                  ? "bg-blue-50 border-blue-200"
-                                  : "bg-red-50 border-red-200"
+                                  ? "bg-blue-50 border-blue-200 hover:bg-blue-100"
+                                  : "bg-red-50 border-red-200 hover:bg-red-100"
                             }`}
+                            onClick={() => setExpandedMatch(expandedMatch === match.id ? null : match.id)}
                           >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{match.opponent}</p>
-                                <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
-                                  match.isHome 
-                                    ? "bg-blue-100 text-blue-700" 
-                                    : "bg-slate-100 text-slate-700"
-                                }`}>
-                                  {match.isHome ? "H" : "A"}
-                                </span>
+                            <div className="flex items-center justify-between p-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{match.opponent}</p>
+                                  <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
+                                    match.isHome 
+                                      ? "bg-blue-100 text-blue-700" 
+                                      : "bg-slate-100 text-slate-700"
+                                  }`}>
+                                    {match.isHome ? "H" : "A"}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-slate-600">{match.date}</p>
                               </div>
-                              <p className="text-xs text-slate-600">{match.date}</p>
+                              <div className="text-right ml-4 flex-shrink-0">
+                                <p className="text-lg font-bold text-slate-900">{match.score}</p>
+                                <p
+                                  className={`text-xs font-semibold mt-0.5 ${
+                                    match.result === "win"
+                                      ? "text-emerald-600"
+                                      : match.result === "draw"
+                                        ? "text-blue-600"
+                                        : "text-red-600"
+                                  }`}
+                                >
+                                  {match.result.toUpperCase()}
+                                </p>
+                              </div>
                             </div>
-                            <div className="text-right ml-4 flex-shrink-0">
-                              <p className="text-lg font-bold text-slate-900">{match.score}</p>
-                              <p
-                                className={`text-xs font-semibold mt-0.5 ${
-                                  match.result === "win"
-                                    ? "text-emerald-600"
-                                    : match.result === "draw"
-                                      ? "text-blue-600"
-                                      : "text-red-600"
-                                }`}
-                              >
-                                {match.result.toUpperCase()}
-                              </p>
-                            </div>
+                            {expandedMatch === match.id && (
+                              <div className="px-4 pb-4 pt-2 border-t border-slate-200 bg-white/50">
+                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                  <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                                    <p className="text-xs text-slate-600 mb-1">Shots on Target</p>
+                                    <p className="text-xl font-bold text-purple-600">
+                                      {match.shotsOnTarget !== null ? match.shotsOnTarget : "N/A"}
+                                    </p>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                                    <p className="text-xs text-slate-600 mb-1">Corners</p>
+                                    <p className="text-xl font-bold text-orange-600">
+                                      {match.corners !== null ? match.corners : "N/A"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        ))}
+                          ))}
                         </div>
                       )}
                     </div>
@@ -579,49 +618,92 @@ export function Teams() {
                                     return (
                                       <div
                                         key={match.id}
-                                        className="p-4 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                                        className="rounded-lg border border-slate-200 cursor-pointer transition-all hover:bg-slate-50"
+                                        onClick={() => setExpandedH2hMatch(expandedH2hMatch === match.id ? null : match.id)}
                                       >
-                                        <div className="flex items-center justify-between gap-4">
-                                          <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                              <span className={`text-sm font-semibold truncate ${
+                                        <div className="p-4">
+                                          <div className="flex items-center justify-between gap-4">
+                                            <div className="flex-1 min-w-0">
+                                              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                <span className={`text-sm font-semibold truncate ${
+                                                  selectedTeamWon ? "text-emerald-600" : opponentWon ? "text-red-600" : "text-slate-900"
+                                                }`}>
+                                                  {selectedTeam.name}
+                                                </span>
+                                                <span className="text-xs text-slate-500 flex-shrink-0">vs</span>
+                                                <span className={`text-sm font-semibold truncate ${
+                                                  opponentWon ? "text-emerald-600" : selectedTeamWon ? "text-red-600" : "text-slate-900"
+                                                }`}>
+                                                  {h2hTeam2.name}
+                                                </span>
+                                                {match.team1IsHome && (
+                                                  <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex-shrink-0">
+                                                    H
+                                                  </span>
+                                                )}
+                                                {!match.team1IsHome && (
+                                                  <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 flex-shrink-0">
+                                                    A
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <p className="text-xs text-slate-500">{match.date}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                              <span className={`text-lg font-bold ${
                                                 selectedTeamWon ? "text-emerald-600" : opponentWon ? "text-red-600" : "text-slate-900"
                                               }`}>
-                                                {selectedTeam.name}
+                                                {match.team1Score}
                                               </span>
-                                              <span className="text-xs text-slate-500 flex-shrink-0">vs</span>
-                                              <span className={`text-sm font-semibold truncate ${
+                                              <span className="text-slate-400">-</span>
+                                              <span className={`text-lg font-bold ${
                                                 opponentWon ? "text-emerald-600" : selectedTeamWon ? "text-red-600" : "text-slate-900"
                                               }`}>
-                                                {h2hTeam2.name}
+                                                {match.team2Score}
                                               </span>
-                                              {match.team1IsHome && (
-                                                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex-shrink-0">
-                                                  H
-                                                </span>
-                                              )}
-                                              {!match.team1IsHome && (
-                                                <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 flex-shrink-0">
-                                                  A
-                                                </span>
-                                              )}
                                             </div>
-                                            <p className="text-xs text-slate-500">{match.date}</p>
-                                          </div>
-                                          <div className="flex items-center gap-2 flex-shrink-0">
-                                            <span className={`text-lg font-bold ${
-                                              selectedTeamWon ? "text-emerald-600" : opponentWon ? "text-red-600" : "text-slate-900"
-                                            }`}>
-                                              {match.team1Score}
-                                            </span>
-                                            <span className="text-slate-400">-</span>
-                                            <span className={`text-lg font-bold ${
-                                              opponentWon ? "text-emerald-600" : selectedTeamWon ? "text-red-600" : "text-slate-900"
-                                            }`}>
-                                              {match.team2Score}
-                                            </span>
                                           </div>
                                         </div>
+                                        {expandedH2hMatch === match.id && (
+                                          <div className="px-4 pb-4 pt-2 border-t border-slate-200 bg-slate-50/50">
+                                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                              <div className="bg-white rounded-lg p-3 border border-slate-200">
+                                                <p className="text-xs text-slate-600 mb-1 font-semibold">{selectedTeam.name}</p>
+                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                  <div className="bg-purple-50 rounded p-2 border border-purple-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Shots on Target</p>
+                                                    <p className="text-base font-bold text-purple-600">
+                                                      {match.team1ShotsOnTarget !== null ? match.team1ShotsOnTarget : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                  <div className="bg-orange-50 rounded p-2 border border-orange-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Corners</p>
+                                                    <p className="text-base font-bold text-orange-600">
+                                                      {match.team1Corners !== null ? match.team1Corners : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div className="bg-white rounded-lg p-3 border border-slate-200">
+                                                <p className="text-xs text-slate-600 mb-1 font-semibold">{h2hTeam2.name}</p>
+                                                <div className="grid grid-cols-2 gap-2 mt-2">
+                                                  <div className="bg-purple-50 rounded p-2 border border-purple-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Shots on Target</p>
+                                                    <p className="text-base font-bold text-purple-600">
+                                                      {match.team2ShotsOnTarget !== null ? match.team2ShotsOnTarget : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                  <div className="bg-orange-50 rounded p-2 border border-orange-200">
+                                                    <p className="text-xs text-slate-600 mb-0.5">Corners</p>
+                                                    <p className="text-base font-bold text-orange-600">
+                                                      {match.team2Corners !== null ? match.team2Corners : "N/A"}
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     );
                                   })}

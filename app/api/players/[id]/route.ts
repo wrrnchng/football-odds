@@ -44,7 +44,7 @@ export async function GET(
       position: player.position,
       team: currentTeamName,
       goals: stats.goals,
-      assists: stats.assists,
+      shotsOnTarget: stats.shotsOnTarget,
       appearances: stats.appearances,
       rating: 0, // TODO: Calculate from performance metrics
     });

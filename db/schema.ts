@@ -78,6 +78,17 @@ export const matchStatistics = sqliteTable("match_statistics", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// Player match statistics table - tracks goals, shots on target per match
+export const playerMatchStats = sqliteTable("player_match_stats", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  matchId: integer("match_id").references(() => matches.id).notNull(),
+  playerId: integer("player_id").references(() => players.id).notNull(),
+  teamId: integer("team_id").references(() => teams.id).notNull(),
+  goals: integer("goals").notNull().default(0),
+  shotsOnTarget: integer("shots_on_target").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
+});
+
 // Relations
 export const leaguesRelations = relations(leagues, ({ many }) => ({
   matches: many(matches),
@@ -92,6 +103,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({
 
 export const playersRelations = relations(players, ({ many }) => ({
   matchPlayers: many(matchPlayers),
+  playerMatchStats: many(playerMatchStats),
 }));
 
 export const matchesRelations = relations(matches, ({ one, many }) => ({
@@ -143,6 +155,21 @@ export const matchStatisticsRelations = relations(matchStatistics, ({ one }) => 
   }),
   team: one(teams, {
     fields: [matchStatistics.teamId],
+    references: [teams.id],
+  }),
+}));
+
+export const playerMatchStatsRelations = relations(playerMatchStats, ({ one }) => ({
+  match: one(matches, {
+    fields: [playerMatchStats.matchId],
+    references: [matches.id],
+  }),
+  player: one(players, {
+    fields: [playerMatchStats.playerId],
+    references: [players.id],
+  }),
+  team: one(teams, {
+    fields: [playerMatchStats.teamId],
     references: [teams.id],
   }),
 }));

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getHeadToHead } from "@/lib/db/teams";
 import { db } from "@/db";
-import { teams } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { teams, matchStatistics } from "@/db/schema";
+import { eq, and, or, inArray } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +34,48 @@ export async function GET(
 
     const h2h = await getHeadToHead(team1Id, team2Id);
 
-    // Format matches for response
+    if (h2h.matches.length === 0) {
+      return NextResponse.json({
+        team1Wins: h2h.team1Wins,
+        team2Wins: h2h.team2Wins,
+        draws: h2h.draws,
+        matches: [],
+      });
+    }
+
+    // Batch fetch all match statistics in one query
+    const matchIds = h2h.matches.map(m => m.id);
+    const allMatchStats = await db
+      .select({
+        matchId: matchStatistics.matchId,
+        teamId: matchStatistics.teamId,
+        shotsOnTarget: matchStatistics.shotsOnTarget,
+        corners: matchStatistics.corners,
+      })
+      .from(matchStatistics)
+      .where(
+        and(
+          inArray(matchStatistics.matchId, matchIds),
+          or(
+            eq(matchStatistics.teamId, team1Id),
+            eq(matchStatistics.teamId, team2Id)
+          )
+        )
+      );
+
+    // Create maps for quick lookup: matchId -> teamId -> stats
+    const statsMap = new Map<number, Map<number, { shotsOnTarget: number | null; corners: number | null }>>();
+    for (const stat of allMatchStats) {
+      if (!statsMap.has(stat.matchId)) {
+        statsMap.set(stat.matchId, new Map());
+      }
+      statsMap.get(stat.matchId)!.set(stat.teamId, {
+        shotsOnTarget: stat.shotsOnTarget,
+        corners: stat.corners,
+      });
+    }
+
+    // Format matches for response with statistics
     const formattedMatches = h2h.matches.map((match) => {
       const date = match.date instanceof Date
         ? match.date
@@ -44,6 +85,11 @@ export async function GET(
         month: "short",
         day: "numeric",
       });
+
+      // Get match statistics from map
+      const matchStats = statsMap.get(match.id);
+      const team1Stats = matchStats?.get(team1Id);
+      const team2Stats = matchStats?.get(team2Id);
 
       return {
         id: match.id,
@@ -55,6 +101,10 @@ export async function GET(
         team1Score: match.team1Score,
         team2Score: match.team2Score,
         team1IsHome: match.team1IsHome,
+        team1ShotsOnTarget: team1Stats?.shotsOnTarget ?? null,
+        team1Corners: team1Stats?.corners ?? null,
+        team2ShotsOnTarget: team2Stats?.shotsOnTarget ?? null,
+        team2Corners: team2Stats?.corners ?? null,
       };
     });
 

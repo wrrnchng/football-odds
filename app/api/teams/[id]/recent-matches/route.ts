@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRecentMatches } from "@/lib/db/teams";
 import { db } from "@/db";
-import { teams } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { teams, matchStatistics } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
@@ -34,20 +34,43 @@ export async function GET(
       return NextResponse.json([]);
     }
 
+    // Batch fetch all team names and match statistics in one query each
+    const matchIds = matches.map(m => m.id);
+    const teamIds = new Set<number>();
+    matches.forEach(m => {
+      teamIds.add(m.homeTeamId);
+      teamIds.add(m.awayTeamId);
+    });
+
+    // Get all teams in one query
+    const allTeams = await db
+      .select()
+      .from(teams)
+      .where(inArray(teams.id, Array.from(teamIds)));
+    const teamsMap = new Map(allTeams.map(t => [t.id, t]));
+
+    // Get all match statistics in one query
+    const allMatchStats = await db
+      .select({
+        matchId: matchStatistics.matchId,
+        teamId: matchStatistics.teamId,
+        shotsOnTarget: matchStatistics.shotsOnTarget,
+        corners: matchStatistics.corners,
+      })
+      .from(matchStatistics)
+      .where(
+        and(
+          inArray(matchStatistics.matchId, matchIds),
+          eq(matchStatistics.teamId, teamId)
+        )
+      );
+    const statsMap = new Map(allMatchStats.map(s => [s.matchId, s]));
+
     // Format matches for frontend
-    const formattedMatches = await Promise.all(
-      matches.map(async (match) => {
-        try {
-        const [homeTeam] = await db
-          .select()
-          .from(teams)
-          .where(eq(teams.id, match.homeTeamId))
-          .limit(1);
-        const [awayTeam] = await db
-          .select()
-          .from(teams)
-          .where(eq(teams.id, match.awayTeamId))
-          .limit(1);
+    const formattedMatches = matches.map((match) => {
+      try {
+        const homeTeam = teamsMap.get(match.homeTeamId);
+        const awayTeam = teamsMap.get(match.awayTeamId);
 
         const isHome = match.homeTeamId === teamId;
         const opponent = isHome ? awayTeam : homeTeam;
@@ -70,20 +93,24 @@ export async function GET(
           dateStr = String(match.date).split("T")[0];
         }
 
-          return {
-            id: match.id,
-            opponent: opponent?.name || "Unknown",
-            score: `${teamScore ?? "?"}-${opponentScore ?? "?"}`,
-            result,
-            date: dateStr,
-            isHome,
-          };
-        } catch (matchError) {
-          console.error(`Error formatting match ${match.id}:`, matchError);
-          return null;
-        }
-      })
-    );
+        // Get match statistics from map
+        const teamStats = statsMap.get(match.id);
+
+        return {
+          id: match.id,
+          opponent: opponent?.name || "Unknown",
+          score: `${teamScore ?? "?"}-${opponentScore ?? "?"}`,
+          result,
+          date: dateStr,
+          isHome,
+          shotsOnTarget: teamStats?.shotsOnTarget ?? null,
+          corners: teamStats?.corners ?? null,
+        };
+      } catch (matchError) {
+        console.error(`Error formatting match ${match.id}:`, matchError);
+        return null;
+      }
+    });
 
     // Filter out any null results
     const validMatches = formattedMatches.filter((m): m is NonNullable<typeof m> => m !== null);

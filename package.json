@@ -13,7 +13,8 @@
     "db:populate": "tsx scripts/populate-db.ts",
     "db:diagnose": "tsx scripts/diagnose-missing-matches.ts",
     "db:check-leagues": "tsx scripts/check-team-leagues.ts",
-    "db:fetch-past-year": "tsx scripts/fetch-past-year.ts"
+    "db:fetch-past-year": "tsx scripts/fetch-past-year.ts",
+    "db:refetch": "tsx scripts/refetch-matches.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

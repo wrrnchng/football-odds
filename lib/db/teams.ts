@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { teams, matches, matchPlayers } from "@/db/schema";
-import { eq, and, or, desc, lt, isNotNull } from "drizzle-orm";
+import { teams, matches, matchPlayers, matchStatistics } from "@/db/schema";
+import { eq, and, or, desc, lt, isNotNull, sql } from "drizzle-orm";
 
 export async function upsertTeam(data: {
   espnTeamId: string;
@@ -96,6 +96,18 @@ export async function getTeamStats(teamId: number) {
 
   const points = wins * 3 + draws;
 
+  // Get aggregated shots on target and corners from match statistics
+  const matchStats = await db
+    .select({
+      shotsOnTarget: sql<number>`sum(${matchStatistics.shotsOnTarget})`.as("shotsOnTarget"),
+      corners: sql<number>`sum(${matchStatistics.corners})`.as("corners"),
+    })
+    .from(matchStatistics)
+    .where(eq(matchStatistics.teamId, teamId));
+
+  const totalShotsOnTarget = matchStats[0] ? Number(matchStats[0].shotsOnTarget) || 0 : 0;
+  const totalCorners = matchStats[0] ? Number(matchStats[0].corners) || 0 : 0;
+
   return {
     wins,
     draws,
@@ -103,6 +115,8 @@ export async function getTeamStats(teamId: number) {
     goalsScored,
     goalsConceded,
     points,
+    shotsOnTarget: totalShotsOnTarget,
+    corners: totalCorners,
   };
 }
 
